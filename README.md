@@ -1,0 +1,2 @@
+# SmarterHeaterRegistry
+Smart Heater Registry. 
