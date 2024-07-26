@@ -1,2 +1,2 @@
-# SmarterHeaterRegistry
-Smart Heater Registry. 
+# SmarterVenting
+Smarter Venting
