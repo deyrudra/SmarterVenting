@@ -52,7 +52,8 @@ captive_portal:
 servo:
   - id: my_servo
     output: pwm_output
-    transition_length: 1s
+    transition_length: 0.6s
+
 
 output:
   - platform: esp8266_pwm
@@ -69,6 +70,9 @@ button:
         - servo.write:
             id: my_servo
             level: 100%
+        - delay: 2s
+        - servo.detach:
+            id: my_servo
         - output.turn_off: pwm_output
         
   - platform: template
@@ -78,6 +82,9 @@ button:
         - servo.write:
             id: my_servo
             level: 80%
+        - delay: 2s
+        - servo.detach:
+            id: my_servo
         - output.turn_off: pwm_output
 
   - platform: template
@@ -87,6 +94,9 @@ button:
         - servo.write:
             id: my_servo
             level: 60%
+        - delay: 2s
+        - servo.detach:
+            id: my_servo
         - output.turn_off: pwm_output
 
   - platform: template
@@ -96,6 +106,9 @@ button:
         - servo.write:
             id: my_servo
             level: 40%
+        - delay: 2s
+        - servo.detach:
+            id: my_servo
         - output.turn_off: pwm_output
 
   - platform: template
@@ -105,6 +118,9 @@ button:
         - servo.write:
             id: my_servo
             level: 0%
+        - delay: 2s
+        - servo.detach:
+            id: my_servo
         - output.turn_off: pwm_output
 
   - platform: template
@@ -114,6 +130,9 @@ button:
         - servo.write:
             id: my_servo
             level: -20%
+        - delay: 2s
+        - servo.detach:
+            id: my_servo
         - output.turn_off: pwm_output
 
   - platform: template
@@ -123,6 +142,9 @@ button:
         - servo.write:
             id: my_servo
             level: -40%
+        - delay: 2s
+        - servo.detach:
+            id: my_servo
         - output.turn_off: pwm_output
 
   - platform: template
@@ -132,6 +154,9 @@ button:
         - servo.write:
             id: my_servo
             level: -60%
+        - delay: 2s
+        - servo.detach:
+            id: my_servo
         - output.turn_off: pwm_output
 
   - platform: template
@@ -141,6 +166,9 @@ button:
         - servo.write:
             id: my_servo
             level: -80%
+        - delay: 2s
+        - servo.detach:
+            id: my_servo
         - output.turn_off: pwm_output
 
   - platform: template
@@ -150,5 +178,7 @@ button:
         - servo.write:
             id: my_servo
             level: -100%
+        - delay: 2s
+        - servo.detach:
+            id: my_servo
         - output.turn_off: pwm_output
-        
