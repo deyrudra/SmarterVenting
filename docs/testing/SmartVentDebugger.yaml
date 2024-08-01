@@ -1,11 +1,13 @@
-# Notes
-# - output.turn_off: pwm_output | This command stops the servo from jitterring after movement.
-# - This script allows you to go through from 0% to 100% of the servo range.
+# This script allows you to go through from 0% to 100% of the servo range.
 # Created by: deyrudra 2027-07-26
 
 # Currently using a knockoff MG90 (metal gears). However for some reason after movement the motor
 # seems to jitter in place. This doesn't happen in the Arduino IDE, only in ESPHome in HAOS.
-# The fix I found was to put - output.turn_off: pwm_output, after any Servo write operation.
+# The fix I found was to put this after any Servo write operation:
+  # - delay: 2s
+  # - servo.detach:
+  # id: my_servo
+  # - output.turn_off: pwm_output
 
 
 esphome:
@@ -49,6 +51,8 @@ captive_portal:
 
 
 # Servo setup
+
+
 servo:
   - id: my_servo
     output: pwm_output
@@ -182,3 +186,19 @@ button:
         - servo.detach:
             id: my_servo
         - output.turn_off: pwm_output
+
+
+switch:
+  - platform: template
+    name: "Deep Sleep Control"
+    id: deep_sleep_switch
+    optimistic: true
+    turn_on_action:
+      - deep_sleep.prevent: deep_sleep_mode
+    turn_off_action:
+      - deep_sleep.enter: deep_sleep_mode
+
+deep_sleep:
+  id: deep_sleep_mode
+  run_duration: 60s
+  sleep_duration: 60s
