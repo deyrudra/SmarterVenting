@@ -55,6 +55,13 @@ This document shares details on the project's MQTT topics, payloads, and their r
   - **Type**: ON or OFF
   - **Description**: Sets the current status light to ON or OFF
 
+#### Last Will and Testament (LWT)
+- **Topic**: `room_x/dht_sensor/status`
+- **Payload**: "offline", "online"
+- **QoS**: `1`
+- **Retain**: `True`
+- **Description**: Sent when the device goes offline unexpectedly.
+
 ### 2.2 Vent Component
 
 #### Get Current Vent Angle
