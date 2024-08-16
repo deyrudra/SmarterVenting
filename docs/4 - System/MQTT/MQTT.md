@@ -49,11 +49,24 @@ This document shares details on the project's MQTT topics, payloads, and their r
 - QoS: 0
 - Retain: True
 
+#### Get Calibrate Offset
+- **Topic**: `room_x/dht_sensor/calibrate`
+- **Payload**: 
+  - **Type**: null
+  - **Description**: Requests the current temperature offset integer.
+- Retain: True
+ 
 #### Set Indicator Light Status
 - **Topic**: `room_x/dht_sensor/light`
 - **Payload**: 
   - **Type**: ON or OFF
   - **Description**: Sets the current status light to ON or OFF
+
+#### Set Calibrate Offset
+- **Topic**: `room_x/dht_sensor/calibrate`
+- **Payload**: Any integer between -10 to 10
+  - **Type**: int
+  - **Description**: Offsets the temperature by an integer.
 
 #### Last Will and Testament (LWT)
 - **Topic**: `room_x/dht_sensor/status`

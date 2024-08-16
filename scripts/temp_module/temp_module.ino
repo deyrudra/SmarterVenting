@@ -3,6 +3,9 @@
 #include "secrets.h"
 
 #include <ESP8266WiFi.h>
+#include <ESP8266mDNS.h>
+#include <WiFiUdp.h>
+#include <ArduinoOTA.h>
 #include <PubSubClient.h>
 #include "DHT.h"
 
@@ -18,7 +21,7 @@ int value = 0;
 DHT dht(DHTPIN, DHTTYPE);
 
 int ledState;
-
+double temp_offset_celsius = 0;
 
 void connect_wifi() { // Wifi Connection
   WiFi.mode(WIFI_STA);
@@ -41,6 +44,29 @@ void connect_mqtt_broker() { // MQTT Connection
   client.setCallback(callback);
 }
 
+void arduino_ota() {
+  ArduinoOTA.setHostname("myesp8266");
+  ArduinoOTA.setPassword((const char *)"123");
+  ArduinoOTA.onStart([]() {
+    Serial.println("Start");
+  });
+  ArduinoOTA.onEnd([]() {
+    Serial.println("\nEnd");
+  });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+    else if (error == OTA_END_ERROR) Serial.println("End Failed");
+  });
+  ArduinoOTA.begin();
+}
+
 void callback(char* topic, byte* payload, unsigned int length) { // Reading MQTT Messages
   char message[length + 1];
   // Logging received topic and payload.
@@ -55,13 +81,17 @@ void callback(char* topic, byte* payload, unsigned int length) { // Reading MQTT
 
   // Custom Commands (Set/Subscription)
   if (strcmp(topic, "room_1/dht_sensor/light") == 0){
-      Serial.println("Hey this worked atleast");
       if (strcmp(message,"OFF") == 0) {
         ledState = HIGH;// Turn the LED off
       } else if (strcmp(message,"ON") == 0) {
         ledState = LOW;// Turn the LED on
       }
       digitalWrite(BUILTIN_LED, ledState);  
+  }
+
+  if (strcmp(topic, "room_1/dht_sensor/calibrate") == 0){
+    char *eptr;
+    temp_offset_celsius = strtod(message, &eptr);
   }
 }
 
@@ -122,16 +152,23 @@ void setup() {
   // Connect to MQTT broker
   connect_mqtt_broker();
 
+  // Connect with Arduino OTA updates
+  arduino_ota();
+
 }
  
 
 void loop() {
 
+  //PubSub Client
   if (!client.connected()) {
     reconnect();
   }
   client.loop();
 
+  ArduinoOTA.handle(); // OTA Handler
+
+  // Operations
   unsigned long now = millis();
   if (now - lastMsg > 5000) { // 5 second transfer
     lastMsg = now;
@@ -139,41 +176,30 @@ void loop() {
     // Publish messages here
     
     // Current Temperature Celsius
-    double temp_celsius = dht.readTemperature();
-    snprintf (msg, MSG_BUFFER_SIZE, "%lf", temp_celsius);
+    double temp_celsius = dht.readTemperature() + (double) temp_offset_celsius;
+    snprintf (msg, MSG_BUFFER_SIZE, "%.1lf", temp_celsius);
     Serial.print("Publish message: ");
-    Serial.print(msg);
+    Serial.println(msg);
     client.publish("room_1/dht_sensor/temperature/celsius", msg, true);
 
     // Current Temperature Ferenehit
-    double temp_ferenheit = dht.readTemperature(true);
-    snprintf (msg, MSG_BUFFER_SIZE, "%lf", temp_ferenheit);
+    double temp_ferenheit = temp_celsius * (9.0/5.0) + 32.0;
+    snprintf (msg, MSG_BUFFER_SIZE, "%.1lf", temp_ferenheit);
     Serial.print("Publish message: ");
-    Serial.print(msg);
+    Serial.println(msg);
     client.publish("room_1/dht_sensor/temperature/ferenheit", msg, true);
    
     // Current Humidity
     double humidity = dht.readHumidity();
-    snprintf (msg, MSG_BUFFER_SIZE, "%lf", humidity);
+    snprintf (msg, MSG_BUFFER_SIZE, "%.1lf%%", humidity); // %% for printing %
     Serial.print("Publish message: ");
-    Serial.print(msg);
+    Serial.println(msg);
     client.publish("room_1/dht_sensor/humidity", msg, true);
 
-    // Indicator Light Status
-    // if (ledState == HIGH) { //OFF
-    //   snprintf (msg, MSG_BUFFER_SIZE, "OFF");
-    // }
-    // else { // ON
-    //   snprintf (msg, MSG_BUFFER_SIZE, "ON");
-    // }
-    // Serial.print("Publish message: ");
-    // Serial.print(msg);
-    // client.publish("room_1/dht_sensor/light", msg);
-    
     // Offline Status
     snprintf (msg, MSG_BUFFER_SIZE, "online");
     Serial.print("Publish message: ");
-    Serial.print(msg);
+    Serial.println(msg);
     client.publish("room_1/dht_sensor/status", msg, true);
 
 
