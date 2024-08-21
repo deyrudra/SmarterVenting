@@ -124,7 +124,7 @@ This document shares details on the project's MQTT topics, payloads, and their r
 - **Topic**: `room_x/vent/desired_temp_state`
 - **Payload**: 
   - **Type**: null
-  - **Description**: Request to see if the desired temperature has been reached, or if it's still ongoing.
+  - **Description**: Request to see if the desired temperature has been reached, or if it's still ongoing. YES for reached state, NO for not reached yet.
 - QoS: 1
 - Retain: True
 

@@ -1,5 +1,3 @@
-// This script connects to the wifi automatically.
-
 #include "secrets.h"
 
 #include <ESP8266WiFi.h>
