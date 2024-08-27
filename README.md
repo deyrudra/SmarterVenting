@@ -1,6 +1,8 @@
 # SmarterVenting
 This is a Smarter Venting system that uses a hierarchy for prioritization of when to open vents, and at which degree.
 
+*Note*: This is the main directory, which uses the esp8266 d1 mini microcontroller. The esp32 directory, using the LolinD32 (esp32) microcontroller.
+
 Hierarchy:
 1. Priority Rooms
    - Rooms above a garage.
