@@ -1,6 +1,8 @@
 # SmarterVenting
 This is a Smarter Venting system that uses a hierarchy for prioritization of when to open vents, and at which degree.
 
+*Note*: This system uses the esp32 SoC, specifically the Lolin D32. 
+
 Hierarchy:
 1. Priority Rooms
    - Rooms above a garage.
