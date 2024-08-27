@@ -1,11 +1,10 @@
 #include "secrets.h"
-
-#include <ESP8266WiFi.h>
-#include <ESP8266mDNS.h>
+#include <WiFi.h>
+// #include <ESP8266mDNS.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 #include <PubSubClient.h>
-#include <Servo.h>
+#include <ESP32Servo.h>
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -13,6 +12,9 @@ unsigned long lastMsg = 0;
 #define MSG_BUFFER_SIZE	50
 char msg[MSG_BUFFER_SIZE];
 int value = 0;
+
+#define uS_TO_S_FACTOR 1000000  /* Conversion factor for micro seconds to seconds */
+#define TIME_TO_SLEEP  60        /* Time ESP32 will go to sleep (in seconds) */
 
 int ledState;
 int finAngle;
@@ -25,23 +27,21 @@ double currentTemp;
 String desiredTempState;
 Servo myServo;
 const int SERVOPIN = 2;
-
-
+int priority;
 
 void connect_wifi() { // Wifi Connection
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASS);
-
+  
   Serial.print("Connecting to the wifi...");
   while (WiFi.status() != WL_CONNECTED){
     delay(500);
     Serial.print(".");
   }
-  Serial.println();
 
+  Serial.println();
   Serial.print("Connected, IP Address: ");
   Serial.println(WiFi.localIP());
-
 }
 
 void connect_mqtt_broker() { // MQTT Connection
@@ -113,7 +113,7 @@ void callback(char* topic, byte* payload, unsigned int length) { // Reading MQTT
   if (strcmp(topic, "room_1/vent/angle") == 0) {
     char* pEnd;
     double angle = strtod(message, &pEnd);
-    if (0 <= angle <= 90){
+    if (0 <= angle <= 90) {
       moveVent(angle);
     }
   }
@@ -135,7 +135,7 @@ void callback(char* topic, byte* payload, unsigned int length) { // Reading MQTT
   //     moveVent(90);
   //   }
   // } 
-
+ 
   if (strcmp(topic, "room_1/vent/power_mode") == 0) {
     // ("Default", "Eco", "Max-Power")
     if (strcmp(message, "Default") == 0) {
@@ -183,6 +183,11 @@ void callback(char* topic, byte* payload, unsigned int length) { // Reading MQTT
     currentTemp = strtod(message, &eptr);
   }
 
+  if (strcmp(topic, "room_1/vent/priority") == 0) {
+    // 17 to 26 degrees
+    char* pEnd;
+    priority = (int) strtod(message, &pEnd);
+  } 
 
   // if (strcmp(topic, "room_1/dht_sensor/light") == 0){
   //     if (strcmp(message,"OFF") == 0) {
@@ -273,8 +278,6 @@ void coolingCycle() {
     }
   }
 
-  
-
   if (currentTemp > (desiredTemp + 0.5)) {
     moveVent(90); // To cool the current temp
     desiredTempState = "NO";
@@ -327,9 +330,6 @@ void loop() {
   unsigned long now = millis();
   if (now - lastMsg > 5000) { // 5 second transfer
     lastMsg = now;
-
-    //Test
-    // 1s here
 
     // Current Vent Closure State ("Closed", "Semi-Closed", "Open", "Semi-Open")
     snprintf (msg, MSG_BUFFER_SIZE, "%s", closureState.c_str());
@@ -393,6 +393,8 @@ void loop() {
         // Call cooling cycle function
         coolingCycle();
       }
+      esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
+      esp_deep_sleep_start();
 
     }
 
